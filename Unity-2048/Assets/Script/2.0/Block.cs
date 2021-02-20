@@ -14,7 +14,27 @@ public class Block : MonoBehaviour
     }
     private Text _text;
 
-    private float _appearSpeed = 5.0f;
+    private Image image
+    {
+        get
+        {
+            if (_image == null) { _image = GetComponent<Image>(); }
+            return _image;
+        }
+    }
+    private Image _image;
+
+    private CanvasGroup canvasGroup
+    {
+        get
+        {
+            if (_canvasGroup == null) { _canvasGroup = GetComponent<CanvasGroup>(); }
+            return _canvasGroup;
+        }
+    }
+    private CanvasGroup _canvasGroup;
+
+    private const float AppearSpeed = 8f;
 
     public void SetSize(float size)
     {
@@ -24,7 +44,13 @@ public class Block : MonoBehaviour
 
     public void Set(int value)
     {
-        text.text = value == 0 ? null : value.ToString();
+        text.text = value.ToString();
+    }
+
+    public void Reset()
+    {
+        canvasGroup.alpha = 1.0f;
+        transform.localScale = Vector3.one;
     }
 
     public void AnimateAppear()
@@ -37,11 +63,13 @@ public class Block : MonoBehaviour
     private IEnumerator ProcessAppear()
     {
         transform.localScale = Vector3.zero;
-        float scale = 0.0f;
+        canvasGroup.alpha = 0;
+        float value = 0.0f;
         while (transform.localScale.x < 0.9f)
         {
-            scale += _appearSpeed * Time.deltaTime;
-            transform.localScale = Vector3.one * scale;
+            value += AppearSpeed * Time.deltaTime;
+            canvasGroup.alpha += AppearSpeed * Time.deltaTime;
+            transform.localScale = Vector3.one * value;
             yield return null;
         }
         transform.localScale = Vector3.one;

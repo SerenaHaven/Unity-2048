@@ -6,25 +6,26 @@ using UnityEngine.UI;
 [CustomEditor(typeof(RoundCornerImage))]
 public class RoundCornerImageEditor : ImageEditor
 {
-    private SerializedProperty propertySegment;
-    private SerializedProperty propertyTopLeftRadius;
-    private SerializedProperty propertyTopRightRadius;
-    private SerializedProperty propertyBottomLeftRadius;
-    private SerializedProperty propertyBottomRightRadius;
-    private RectTransform rectTransform;
-
-    private bool unifiedRadius = true;
-    private bool maximumRadius = true;
+    private SerializedProperty _segment;
+    private SerializedProperty _topLeftRadius;
+    private SerializedProperty _topRightRadius;
+    private SerializedProperty _bottomLeftRadius;
+    private SerializedProperty _bottomRightRadius;
+    private SerializedProperty _unifiedRadius;
+    private SerializedProperty _maximumRadius;
+    private RectTransform _rectTransform;
 
     protected override void OnEnable()
     {
         base.OnEnable();
-        propertySegment = serializedObject.FindProperty("segment");
-        propertyTopLeftRadius = serializedObject.FindProperty("topLeftRadius");
-        propertyTopRightRadius = serializedObject.FindProperty("topRightRadius");
-        propertyBottomLeftRadius = serializedObject.FindProperty("bottomLeftRadius");
-        propertyBottomRightRadius = serializedObject.FindProperty("bottomRightRadius");
-        rectTransform = (target as Image).rectTransform;
+        _segment = serializedObject.FindProperty("_segment");
+        _topLeftRadius = serializedObject.FindProperty("_topLeftRadius");
+        _topRightRadius = serializedObject.FindProperty("_topRightRadius");
+        _bottomLeftRadius = serializedObject.FindProperty("_bottomLeftRadius");
+        _bottomRightRadius = serializedObject.FindProperty("_bottomRightRadius");
+        _unifiedRadius = serializedObject.FindProperty("_unifiedRadius");
+        _maximumRadius = serializedObject.FindProperty("_maximumRadius");
+        _rectTransform = (target as Image).rectTransform;
     }
 
     public override void OnInspectorGUI()
@@ -34,35 +35,33 @@ public class RoundCornerImageEditor : ImageEditor
         EditorGUILayout.ObjectField("Script", MonoScript.FromMonoBehaviour(target as MonoBehaviour), typeof(MonoScript), false);
         EditorGUI.EndDisabledGroup();
         base.OnInspectorGUI();
-        EditorGUILayout.PropertyField(propertySegment);
-        unifiedRadius = EditorGUILayout.Toggle("Unified Radius", unifiedRadius);
-        serializedObject.ApplyModifiedProperties();
-        if (unifiedRadius == false)
+        EditorGUILayout.PropertyField(_segment);
+        EditorGUILayout.PropertyField(_unifiedRadius);
+        if (_unifiedRadius.boolValue == false)
         {
-            EditorGUILayout.PropertyField(propertyTopLeftRadius);
-            EditorGUILayout.PropertyField(propertyTopRightRadius);
-            EditorGUILayout.PropertyField(propertyBottomLeftRadius);
-            EditorGUILayout.PropertyField(propertyBottomRightRadius);
+            EditorGUILayout.PropertyField(_topLeftRadius);
+            EditorGUILayout.PropertyField(_topRightRadius);
+            EditorGUILayout.PropertyField(_bottomLeftRadius);
+            EditorGUILayout.PropertyField(_bottomRightRadius);
         }
         else
         {
-            maximumRadius = EditorGUILayout.Toggle("Maximum Radius", maximumRadius);
-            serializedObject.ApplyModifiedProperties();
-
-            if (maximumRadius == true)
+            EditorGUILayout.PropertyField(_maximumRadius);
+            if (_maximumRadius.boolValue == true)
             {
-                float size = Mathf.Min(rectTransform.rect.width, rectTransform.rect.height);
-                propertyTopLeftRadius.doubleValue = size * 0.5f;
+                float size = Mathf.Min(_rectTransform.rect.width, _rectTransform.rect.height);
+                _topLeftRadius.doubleValue = size * 0.5f;
             }
-            EditorGUILayout.PropertyField(propertyTopLeftRadius, new GUIContent("Radius"));
-            propertyTopRightRadius.doubleValue = propertyTopLeftRadius.doubleValue;
-            propertyBottomLeftRadius.doubleValue = propertyTopLeftRadius.doubleValue;
-            propertyBottomRightRadius.doubleValue = propertyTopLeftRadius.doubleValue;
+            EditorGUILayout.PropertyField(_topLeftRadius, new GUIContent("Radius"));
+            _topRightRadius.doubleValue = _topLeftRadius.doubleValue;
+            _bottomLeftRadius.doubleValue = _topLeftRadius.doubleValue;
+            _bottomRightRadius.doubleValue = _topLeftRadius.doubleValue;
         }
-        propertyTopLeftRadius.doubleValue = propertyTopLeftRadius.doubleValue < 0 ? 0 : propertyTopLeftRadius.doubleValue;
-        propertyTopRightRadius.doubleValue = propertyTopRightRadius.doubleValue < 0 ? 0 : propertyTopRightRadius.doubleValue;
-        propertyBottomLeftRadius.doubleValue = propertyBottomLeftRadius.doubleValue < 0 ? 0 : propertyBottomLeftRadius.doubleValue;
-        propertyBottomRightRadius.doubleValue = propertyBottomRightRadius.doubleValue < 0 ? 0 : propertyBottomRightRadius.doubleValue;
+
+        _topLeftRadius.doubleValue = _topLeftRadius.doubleValue < 0 ? 0 : _topLeftRadius.doubleValue;
+        _topRightRadius.doubleValue = _topRightRadius.doubleValue < 0 ? 0 : _topRightRadius.doubleValue;
+        _bottomLeftRadius.doubleValue = _bottomLeftRadius.doubleValue < 0 ? 0 : _bottomLeftRadius.doubleValue;
+        _bottomRightRadius.doubleValue = _bottomRightRadius.doubleValue < 0 ? 0 : _bottomRightRadius.doubleValue;
         serializedObject.ApplyModifiedProperties();
     }
 

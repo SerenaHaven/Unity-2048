@@ -44,7 +44,10 @@ public class Block : MonoBehaviour
 
     public void Set(int value)
     {
+        int index = (int)Mathf.Log(value, 2) - 1;
         text.text = value.ToString();
+        text.color = index < 2 ? Config.TextColor1 : Config.TextColor2;
+        image.color = Config.BlockColors[index % Config.BlockColors.Length];
     }
 
     public void Reset()
@@ -55,7 +58,6 @@ public class Block : MonoBehaviour
 
     public void AnimateAppear()
     {
-        gameObject.SetActive(true);
         StopAllCoroutines();
         StartCoroutine(ProcessAppear());
     }

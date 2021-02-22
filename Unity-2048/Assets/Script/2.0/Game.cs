@@ -1,7 +1,8 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
-
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 public class Game : MonoBehaviour
 {
     private readonly Puzzle _puzzle = new Puzzle();
@@ -13,16 +14,58 @@ public class Game : MonoBehaviour
     private GameObjectPool _pool;
 
     private Text _textScore;
+    private Text _textBest;
+
+    private Button _buttonRestart;
+    private Button _buttonMenu;
+
+    private Menu _menu;
+    private Dialog _dialog;
+
+    private int _best;
     private int _score;
+    private int score
+    {
+        get { return _score; }
+        set
+        {
+            _textScore.text = value.ToString();
+            _score = value;
+            if (_score > _best)
+            {
+                _best = _score;
+                PlayerPrefs.SetInt("Best", value);
+                _textBest.text = value.ToString();
+            }
+        }
+    }
 
     private bool _moving = false;
     private float _lerp = 0.0f;
 
+    private Vector2 _touchBeganPosition;
+    private bool _slide = false;
+
     void Awake()
     {
         _textScore = transform.Find("Score/TextScore").GetComponent<Text>();
+        _textBest = transform.Find("Best/TextBest").GetComponent<Text>();
+        _buttonRestart = transform.Find("ButtonRestart").GetComponent<Button>();
+        _buttonRestart.onClick.AddListener(OnButtonRestart);
+        _buttonMenu = transform.Find("ButtonMenu").GetComponent<Button>();
+        _buttonMenu.onClick.AddListener(OnButtonMenu);
 
-        _map = transform.Find("Map").GetComponent<Map>();
+        _map = transform.Find("Map").gameObject.AddComponent<Map>();
+
+        _menu = transform.Find("Menu").gameObject.AddComponent<Menu>();
+        _menu.onButton4 = OnButton4;
+        _menu.onButton5 = OnButton5;
+        _menu.onButton6 = OnButton6;
+        _menu.onButtonQuit = OnButtonQuit;
+        _menu.Show(false);
+
+        _dialog = transform.Find("Dialog").gameObject.AddComponent<Dialog>();
+        _dialog.Hide();
 
         _blockRoot = transform.Find("Blocks");
         _blockPrefab = transform.Find("Blocks/Block").gameObject;
@@ -32,12 +75,45 @@ public class Game : MonoBehaviour
 
         _puzzle.onMove += OnMove;
         _puzzle.onGenerate += OnGenerate;
+
+        score = 0;
+        _best = PlayerPrefs.GetInt("Best", 0);
+        _textBest.text = _best.ToString();
     }
 
-    IEnumerator Start()
+    private bool IsPlaying()
     {
-        yield return new WaitForSeconds(0.1f);
-        ResetGame(4);
+        return _menu.gameObject.activeSelf == false && _dialog.gameObject.activeSelf == false;
+    }
+
+    private void OnButtonMenu() { _menu.Show(true); }
+
+    private void OnButtonRestart()
+    {
+        _dialog.Show("Restart Game with current resolution?", ResetGame);
+    }
+
+    private void OnButton4()
+    {
+        if (IsPlaying() == true) { Initialize(4); }
+        else { _dialog.Show("Restart Game with resolution 4?", () => { Initialize(4); }); }
+    }
+
+    private void OnButton5()
+    {
+        if (IsPlaying() == true) { Initialize(5); }
+        else { _dialog.Show("Restart Game with resolution 5?", () => { Initialize(5); }); }
+    }
+
+    private void OnButton6()
+    {
+        if (IsPlaying() == true) { Initialize(6); }
+        else { _dialog.Show("Restart Game with resolution 6?", () => { Initialize(6); }); }
+    }
+
+    private void OnButtonQuit()
+    {
+        _dialog.Show("Quit Game?", QuitGame);
     }
 
     private void OnGenerate(int row, int column, int value, int remain)
@@ -59,15 +135,35 @@ public class Game : MonoBehaviour
         _lerp = 0.0f;
     }
 
-    private void ResetGame(int resolution)
+    private void Initialize(int resolution)
     {
+        _menu.Hide();
+        _dialog.Hide();
         Clear();
         resolution = Mathf.Clamp(resolution, Config.MinResolution, Config.MaxResolution);
         _map.Initialize(resolution);
         _puzzle.Initialize(resolution);
-        _score = 0;
+        score = 0;
     }
 
+    private void ResetGame()
+    {
+        Initialize(_puzzle.resolution);
+    }
+
+    private void GameOver()
+    {
+        _dialog.Show("Game Over. Restart?", ResetGame, () => { _menu.Show(false); });
+    }
+
+    private void QuitGame()
+    {
+#if UNITY_EDITOR
+        EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
 
     private Block Spawn(int row, int column)
     {
@@ -157,7 +253,11 @@ public class Game : MonoBehaviour
                         var blockData = _puzzle[i, j];
                         if (blockData == null) { continue; }
                         block.Set(blockData.nextValue);
-                        if (blockData.merged == true) { block.AnimateAppear(); }
+                        if (blockData.merged == true)
+                        {
+                            score += blockData.nextValue;
+                            block.AnimateAppear();
+                        }
                         blockData.value = blockData.nextValue;
                         blockData.row = blockData.nextRow;
                         blockData.column = blockData.nextColumn;
@@ -167,28 +267,66 @@ public class Game : MonoBehaviour
 
                 if (_lerp > 1.5f)
                 {
-                    _puzzle.Generate();
+                    if (_puzzle.Generate() == 0)
+                    {
+                        GameOver();
+                    }
+
                     _moving = false;
                 }
             }
         }
         else
         {
-            if (Input.GetKey(KeyCode.Space) == true) { _puzzle.Generate(); }
+            if (IsPlaying() == true)
+            {
+                if (Input.GetKey(KeyCode.Space) == true) { _puzzle.Generate(); }
 
-            if (Input.GetKey(KeyCode.A) == true) { _puzzle.Left(); }
+                if (Input.GetKey(KeyCode.A) == true) { _puzzle.Left(); }
 
-            if (Input.GetKey(KeyCode.D) == true) { _puzzle.Right(); }
+                if (Input.GetKey(KeyCode.D) == true) { _puzzle.Right(); }
 
-            if (Input.GetKey(KeyCode.W) == true) { _puzzle.Up(); }
+                if (Input.GetKey(KeyCode.W) == true) { _puzzle.Up(); }
 
-            if (Input.GetKey(KeyCode.S) == true) { _puzzle.Down(); }
+                if (Input.GetKey(KeyCode.S) == true) { _puzzle.Down(); }
 
-            if (Input.GetKeyDown(KeyCode.Alpha1) == true) { ResetGame(4); }
+                if (Input.GetKeyDown(KeyCode.Alpha1) == true) { Initialize(4); }
 
-            if (Input.GetKeyDown(KeyCode.Alpha2) == true) { ResetGame(5); }
+                if (Input.GetKeyDown(KeyCode.Alpha2) == true) { Initialize(5); }
 
-            if (Input.GetKeyDown(KeyCode.Alpha3) == true) { ResetGame(6); }
+                if (Input.GetKeyDown(KeyCode.Alpha3) == true) { Initialize(6); }
+
+                if (Input.touchCount > 0)
+                {
+                    var touch = Input.GetTouch(0);
+                    if (touch.phase == TouchPhase.Began)
+                    {
+                        _touchBeganPosition = touch.position;
+                        _slide = false;
+                    }
+                    else
+                    {
+                        if (_slide == false && touch.phase == TouchPhase.Moved)
+                        {
+                            var delta = touch.position - _touchBeganPosition;
+                            var x = Mathf.Abs(delta.x);
+                            var y = Mathf.Abs(delta.y);
+                            if (Mathf.Max(x, y) >= Config.TouchThreshold)
+                            {
+                                if (x > y)
+                                {
+                                    if (Mathf.Sign(delta.x) > 0) { _puzzle.Right(); } else { _puzzle.Left(); }
+                                }
+                                else
+                                {
+                                    if (Mathf.Sign(delta.y) > 0) { _puzzle.Up(); } else { _puzzle.Down(); }
+                                }
+                                _slide = true;
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

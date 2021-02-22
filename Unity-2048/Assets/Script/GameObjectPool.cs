@@ -8,8 +8,8 @@ public class GameObjectPool : IDisposable
     private string _name;
     private Transform _root;
     private bool _disposed;
-    private List<GameObject> _activeCollection = new List<GameObject>();
-    private List<GameObject> _inactiveCollection = new List<GameObject>();
+    private List<GameObject> _actives = new List<GameObject>();
+    private List<GameObject> _inactives = new List<GameObject>();
     private static readonly object _locker = new object();
 
     public GameObjectPool(GameObject prefab, Transform parent = null)
@@ -49,19 +49,13 @@ public class GameObjectPool : IDisposable
         lock (_locker)
         {
             GameObject result = null;
-            if (_inactiveCollection.Count <= 0)
-            {
-                result = GameObject.Instantiate(_prefab, parent);
-            }
+            if (_inactives.Count <= 0) { result = GameObject.Instantiate(_prefab, parent); }
             else
             {
-                result = _inactiveCollection[0];
-                _inactiveCollection.RemoveAt(0);
+                result = _inactives[0];
+                _inactives.RemoveAt(0);
             }
-            if (_activeCollection.Contains(result) == false)
-            {
-                _activeCollection.Add(result);
-            }
+            if (_actives.Contains(result) == false) { _actives.Add(result); }
             result.transform.SetParent(parent);
             return result;
         }
@@ -73,15 +67,9 @@ public class GameObjectPool : IDisposable
 
         lock (_locker)
         {
-            if (_activeCollection.Contains(target) == true)
-            {
-                _activeCollection.Remove(target);
-            }
+            if (_actives.Contains(target) == true) { _actives.Remove(target); }
 
-            if (_inactiveCollection.Contains(target) == false)
-            {
-                _inactiveCollection.Add(target);
-            }
+            if (_inactives.Contains(target) == false) { _inactives.Add(target); }
 
             target.SetActive(false);
             target.transform.SetParent(_root);
@@ -94,36 +82,25 @@ public class GameObjectPool : IDisposable
 
         lock (_locker)
         {
-            for (int i = _activeCollection.Count - 1; i >= 0; i--)
-            {
-                Despawn(_activeCollection[i]);
-            }
+            for (int i = _actives.Count - 1; i >= 0; i--) { Despawn(_actives[i]); }
         }
     }
 
     public void Clear()
     {
-        if (CheckDisposed() == true)
-        {
-            return;
-        }
+        if (CheckDisposed() == true) { return; }
+
         lock (_locker)
         {
-            if (_activeCollection != null && _activeCollection.Count > 0)
+            if (_actives != null && _actives.Count > 0)
             {
-                foreach (var item in _activeCollection)
-                {
-                    GameObject.Destroy(item);
-                }
-                _activeCollection.Clear();
+                foreach (var item in _actives) { GameObject.Destroy(item); }
+                _actives.Clear();
             }
-            if (_inactiveCollection != null && _inactiveCollection.Count > 0)
+            if (_inactives != null && _inactives.Count > 0)
             {
-                foreach (var item in _inactiveCollection)
-                {
-                    GameObject.Destroy(item);
-                }
-                _inactiveCollection.Clear();
+                foreach (var item in _inactives) { GameObject.Destroy(item); }
+                _inactives.Clear();
             }
         }
     }
@@ -136,7 +113,7 @@ public class GameObjectPool : IDisposable
             Clear();
             _prefab = null;
             _name = null;
-            _inactiveCollection = null;
+            _inactives = null;
             GameObject.Destroy(_root.gameObject);
             _root = null;
             _disposed = true;

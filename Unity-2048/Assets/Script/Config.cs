@@ -8,7 +8,13 @@ public class Config
     public const float BlockMoveSpeed = 8.5f;
     public const int CellSpacing = 20;
 
+    public const float TouchThreshold = 50.0f;
+
+#if UNITY_EDITOR
     public static readonly int[] BlockValues = { 2 };
+#else
+    public static readonly int[] BlockValues = { 2, 4 };
+#endif
 
     public static readonly Color[] BlockColors = {
         new Color(0.937255f,0.8862746f,0.854902f),//2

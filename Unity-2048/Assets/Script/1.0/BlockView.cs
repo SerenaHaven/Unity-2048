@@ -41,15 +41,9 @@ public class BlockView : MonoBehaviour
     public int nextColumn;
     public int nextValue;
 
-    public bool merged
-    {
-        get { return nextValue != 0 && value != nextValue; }
-    }
+    public bool merged { get { return nextValue != 0 && value != nextValue; } }
 
-    public bool moved
-    {
-        get { return row != nextRow || column != nextColumn; }
-    }
+    public bool moved { get { return row != nextRow || column != nextColumn; } }
 
     public void SetSize(float size)
     {

@@ -38,7 +38,6 @@ public class GameView : MonoBehaviour
     private Text _textBest;
 
     private float _cellSize;
-    private float _moveSpeed = 8.5f;
     private bool _moving = false;
     private float _lerp = 0.0f;
 
@@ -172,7 +171,7 @@ public class GameView : MonoBehaviour
     {
         if (_moving == true)
         {
-            _lerp += Time.deltaTime * _moveSpeed;
+            _lerp += Time.deltaTime * Config.BlockMoveSpeed;
 
             if (_lerp < 1.0f)
             {

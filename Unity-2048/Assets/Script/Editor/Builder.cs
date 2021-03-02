@@ -50,6 +50,10 @@ public partial class Builder
     private static bool BuildAndroid()
     {
         Log("Build Android");
+        PlayerSettings.Android.keystoreName = "user.keystore";
+        PlayerSettings.Android.keyaliasName = "release";
+        PlayerSettings.keystorePass = "admin12321";
+        PlayerSettings.keyaliasPass = "admin12321";
         return Build(BuildTarget.Android, Path.Combine(BuildRoot, "Android", Application.productName + ".apk"));
     }
 }

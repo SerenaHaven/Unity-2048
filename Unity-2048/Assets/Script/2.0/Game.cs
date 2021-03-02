@@ -42,6 +42,7 @@ public class Game : MonoBehaviour
 
     private bool _moving = false;
     private float _lerp = 0.0f;
+    private bool _firstEnter = true;
 
     private Vector2 _touchBeganPosition;
     private bool _slide = false;
@@ -98,19 +99,19 @@ public class Game : MonoBehaviour
 
     private void OnButton4()
     {
-        if (IsPlaying() == true) { Initialize(4); }
+        if (_firstEnter == true) { Initialize(4); }
         else { _dialog.Show("Restart Game with resolution 4?", () => { Initialize(4); }); }
     }
 
     private void OnButton5()
     {
-        if (IsPlaying() == true) { Initialize(5); }
+        if (_firstEnter == true) { Initialize(5); }
         else { _dialog.Show("Restart Game with resolution 5?", () => { Initialize(5); }); }
     }
 
     private void OnButton6()
     {
-        if (IsPlaying() == true) { Initialize(6); }
+        if (_firstEnter == true) { Initialize(6); }
         else { _dialog.Show("Restart Game with resolution 6?", () => { Initialize(6); }); }
     }
 
@@ -147,6 +148,7 @@ public class Game : MonoBehaviour
         _map.Initialize(resolution);
         _puzzle.Initialize(resolution);
         score = 0;
+        _firstEnter = false;
     }
 
     private void ResetGame()
@@ -222,16 +224,6 @@ public class Game : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            Vector2 point;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                transform as RectTransform, Input.mousePosition, null, out point);
-
-            Debug.Log(point);
-
-        }
-
         if (_moving == true)
         {
             _lerp += Time.deltaTime * Config.BlockMoveSpeed;
@@ -280,7 +272,7 @@ public class Game : MonoBehaviour
 
                 if (_lerp > 1.5f)
                 {
-                    if (_puzzle.Generate() == 0)
+                    if (_puzzle.Generate() == 0 && _puzzle.CanMove() == false)
                     {
                         GameOver();
                     }

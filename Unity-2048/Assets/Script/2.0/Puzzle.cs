@@ -66,6 +66,28 @@ public class Puzzle
         else { return 0; }
     }
 
+    public bool CanMove()
+    {
+        for (int i = 0; i < resolution - 1; i++)
+        {
+            for (int j = 0; j < resolution - 1; j++)
+            {
+                if (_blockMap[i, j].value == _blockMap[i, j + 1].value ||
+                _blockMap[i, j].value == _blockMap[i + 1, j].value)
+                {
+                    return true;
+                }
+            }
+
+            if (_blockMap[resolution - 1, i].value == _blockMap[resolution - 1, i + 1].value ||
+            _blockMap[i, resolution - 1].value == _blockMap[i + 1, resolution - 1].value)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void Left()
     {
         if (_waitingForRemap == true) { return; }

@@ -45,6 +45,7 @@ public class Game : MonoBehaviour
 
     private Vector2 _touchBeganPosition;
     private bool _slide = false;
+    private RectTransform _rectTransform;
 
     void Awake()
     {
@@ -79,6 +80,8 @@ public class Game : MonoBehaviour
         score = 0;
         _best = PlayerPrefs.GetInt("Best", 0);
         _textBest.text = _best.ToString();
+
+        _rectTransform = transform as RectTransform;
     }
 
     private bool IsPlaying()
@@ -219,6 +222,16 @@ public class Game : MonoBehaviour
 
     void Update()
     {
+        if (Input.GetMouseButtonDown(0))
+        {
+            Vector2 point;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                transform as RectTransform, Input.mousePosition, null, out point);
+
+            Debug.Log(point);
+
+        }
+
         if (_moving == true)
         {
             _lerp += Time.deltaTime * Config.BlockMoveSpeed;
@@ -299,10 +312,17 @@ public class Game : MonoBehaviour
                 if (Input.touchCount > 0)
                 {
                     var touch = Input.GetTouch(0);
+
                     if (touch.phase == TouchPhase.Began)
                     {
-                        _touchBeganPosition = touch.position;
-                        _slide = false;
+                        Vector2 localPoint;
+                        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                            _rectTransform, touch.position, null, out localPoint);
+                        if (localPoint.y < _rectTransform.rect.height * 0.5f - 420.0f)
+                        {
+                            _touchBeganPosition = touch.position;
+                            _slide = false;
+                        }
                     }
                     else
                     {
